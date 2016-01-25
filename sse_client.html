@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="Generator" content="EditPlus®">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+  <title>Using Server-Sent Events & Desktop notifications</title>
+ </head>
+ <body>
+  <div id="log"></div>
+  <script type="text/javascript">
+	var lastdata = "";
+
+	if(typeof(EventSource) !== "") {
+		alert('Congratulations! your browser support Server-Sent Events!');
+		
+		var source = new EventSource("sse_server.php");
+		source.onmessage = function(event) {
+			if(lastdata != event.data) {
+				lastdata = event.data;
+
+				if(!("Notification" in window)) alert('Your browser does not support Desktop notifications, so you can not use this website.');
+				else if (Notification.permission === "granted") {
+					var noti = new Notification('New desktop notification arrived!', {
+							body: event.data, 
+							icon: 'icon.png',
+							noscreen: true,
+							vibrate: [200,, 100, 200]
+						});
+					noti.onClick = function() {
+						alert('Notification clicked!');
+					}
+				} else if (Notification.permission !== "denied" || Notification.permission === "default") {
+					Notification.requestPermission(function (permission) {
+						if(permission === "granted") {
+							var noti = new Notification(event.data);
+						}
+					});
+				}
+			}
+		};
+	} else {
+		alert('Your browser does not support Server-Sent Events, so you can not use this website.');
+	}
+  </script>
+ </body>
+</html>
